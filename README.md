@@ -5,24 +5,15 @@ You can add books, register members, borrow, and return books.
 
 Commands
 
--add_book → Add a new book
-
--view_books → Show all books
-
--add_member → Add a new member
-
--view_members → Show all members
-
--Borrow → Borrow a book
-
--return → Return a book
-
--view_borrowed → Show books borrowed by a member
-
--exit → Exit the program
+add_book → Add a new book
+view_books → Show all books
+add_member → Add a new member
+view_members → Show all members
+Borrow → Borrow a book
+return → Return a book
+view_borrowed → Show books borrowed by a member
+exit → Exit the program
 
 Notes
-
 Data is stored in the library.db (created automatically).
-
 Delete the library.db if you want to reset the system.
