@@ -1,4 +1,4 @@
-from app import init_db
+from database import init_db
 from cli import LibraryCLI
 
 if __name__ == "__main__":

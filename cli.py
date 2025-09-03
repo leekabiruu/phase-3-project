@@ -1,7 +1,7 @@
 import cmd
-from book import Book
-from member import Member
-from loan import Loan
+from book import BookService
+from member import MemberService
+from loan import LoanService
 
 class LibraryCLI(cmd.Cmd):
     intro = "Welcome to the library system. Type help or ? to list commands."
@@ -11,43 +11,45 @@ class LibraryCLI(cmd.Cmd):
         title = input("Title: ")
         author = input("Author: ")
         genre = input("Genre: ")
-        Book.add(title, author, genre)
-        print("Book added.")
+        book = BookService.add(title, author, genre)
+        print(f"Book added: {book.title} by {book.author}")
 
     def do_view_books(self, arg):
-        books = Book.all()
+        books = BookService.all()
         for b in books:
-            print(f"{b[0]}: {b[1]} by {b[2]} ({b[3]}) - {'Available' if b[4] else 'Borrowed'}")
+            status = "Available" if b.available else "Borrowed"
+            print(f"{b.book_id}: {b.title} by {b.author} ({b.genre}) - {status}")
 
     def do_add_member(self, arg):
         name = input("Name: ")
         email = input("Email: ")
-        Member.add(name, email)
-        print("Member added.")
+        member = MemberService.add(name, email)
+        print(f"Member added: {member.name} ({member.email})")
 
     def do_view_members(self, arg):
-        members = Member.all()
+        members = MemberService.all()
         for m in members:
-            print(f"{m[0]}: {m[1]} ({m[2]})")
+            print(f"{m.member_id}: {m.name} ({m.email})")
 
     def do_borrow(self, arg):
         book_id = int(input("Book ID: "))
         member_id = int(input("Member ID: "))
         issue_date = input("Issue Date (YYYY-MM-DD): ")
-        Loan.borrow(book_id, member_id, issue_date)
+        LoanService.borrow(book_id, member_id, issue_date)
 
     def do_return(self, arg):
         book_id = int(input("Book ID: "))
         return_date = input("Return Date (YYYY-MM-DD): ")
-        Loan.return_book(book_id, return_date)
+        LoanService.return_book(book_id, return_date)
 
     def do_view_borrowed(self, arg):
         member_id = int(input("Member ID: "))
-        books = Loan.borrowed_by(member_id)
-        if not books:
+        loans = LoanService.borrowed_by(member_id)
+        if not loans:
             print("No borrowed books.")
-        for b in books:
-            print(f"{b[0]} by {b[1]} (Issued: {b[2]})")
+        else:
+            for loan in loans:
+                print(f"{loan.book.title} by {loan.book.author} (Issued: {loan.issue_date.date()})")
 
     def do_exit(self, arg):
         print("Goodbye!")

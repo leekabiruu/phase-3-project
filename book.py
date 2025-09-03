@@ -1,20 +1,20 @@
-from app import get_connection
+from database import SessionLocal
+from models import Book
 
-class Book:
+class BookService:
     @staticmethod
     def add(title, author, genre):
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO books (title, author, genre) VALUES (?, ?, ?)",
-                       (title, author, genre))
-        conn.commit()
-        conn.close()
+        session = SessionLocal()
+        book = Book(title=title, author=author, genre=genre)
+        session.add(book)
+        session.commit()
+        session.refresh(book)
+        session.close()
+        return book
 
     @staticmethod
     def all():
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM books")
-        books = cursor.fetchall()
-        conn.close()
+        session = SessionLocal()
+        books = session.query(Book).all()
+        session.close()
         return books

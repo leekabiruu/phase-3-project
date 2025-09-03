@@ -1,43 +1,57 @@
-from app import get_connection
+from database import SessionLocal
+from models import Transaction, Book, Member
+from datetime import datetime
 
-class Loan:
+class LoanService:
     @staticmethod
     def borrow(book_id, member_id, issue_date):
-        conn = get_connection()
-        cursor = conn.cursor()
+        session = SessionLocal()
+        book = session.query(Book).filter_by(book_id=book_id).first()
+        member = session.query(Member).filter_by(member_id=member_id).first()
 
-        cursor.execute("SELECT available FROM books WHERE book_id=?", (book_id,))
-        book = cursor.fetchone()
-        if not book or book[0] == 0:
+        if not book:
+            print("Book not found.")
+        elif not member:
+            print("Member not found.")
+        elif not book.available:
             print("Book not available.")
         else:
-            cursor.execute("INSERT INTO transactions (book_id, member_id, issue_date) VALUES (?, ?, ?)",
-                           (book_id, member_id, issue_date))
-            cursor.execute("UPDATE books SET available=0 WHERE book_id=?", (book_id,))
-            conn.commit()
+            loan = Transaction(
+                book_id=book_id,
+                member_id=member_id,
+                issue_date=datetime.fromisoformat(issue_date)
+            )
+            book.available = False
+            session.add(loan)
+            session.commit()
             print("Book borrowed successfully.")
 
-        conn.close()
+        session.close()
 
     @staticmethod
     def return_book(book_id, return_date):
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("UPDATE transactions SET return_date=? WHERE book_id=? AND return_date IS NULL",
-                       (return_date, book_id))
-        cursor.execute("UPDATE books SET available=1 WHERE book_id=?", (book_id,))
-        conn.commit()
-        conn.close()
+        session = SessionLocal()
+        loan = session.query(Transaction).filter(
+            Transaction.book_id == book_id,
+            Transaction.return_date.is_(None)
+        ).first()
+
+        if loan:
+            loan.return_date = datetime.fromisoformat(return_date)
+            loan.book.available = True
+            session.commit()
+            print("Book returned successfully.")
+        else:
+            print("No active loan found for this book.")
+
+        session.close()
 
     @staticmethod
     def borrowed_by(member_id):
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute('''SELECT b.title, b.author, t.issue_date 
-                          FROM transactions t
-                          JOIN books b ON b.book_id = t.book_id
-                          WHERE t.member_id=? AND t.return_date IS NULL''',
-                       (member_id,))
-        books = cursor.fetchall()
-        conn.close()
-        return books
+        session = SessionLocal()
+        loans = session.query(Transaction).filter(
+            Transaction.member_id == member_id,
+            Transaction.return_date.is_(None)
+        ).all()
+        session.close()
+        return loans

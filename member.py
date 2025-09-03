@@ -1,19 +1,20 @@
-from app import get_connection
+from database import SessionLocal
+from models import Member
 
-class Member:
+class MemberService:
     @staticmethod
     def add(name, email):
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO members (name, email) VALUES (?, ?)", (name, email))
-        conn.commit()
-        conn.close()
+        session = SessionLocal()
+        member = Member(name=name, email=email)
+        session.add(member)
+        session.commit()
+        session.refresh(member)
+        session.close()
+        return member
 
     @staticmethod
     def all():
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM members")
-        members = cursor.fetchall()
-        conn.close()
+        session = SessionLocal()
+        members = session.query(Member).all()
+        session.close()
         return members
